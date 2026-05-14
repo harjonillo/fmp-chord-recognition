@@ -2,11 +2,12 @@
 
 Chord recognition for classical solo piano, built up in three stages:
 
-1. **Template-based baseline** (FMP §5.2): chroma features → cosine similarity against 24 binary major/minor triad templates → argmax.
-2. **HMM postfilter** (FMP §5.3): to-do
-3. **Neural model** (PyTorch): to-do
+1. [In-progress] **Template-based baseline** (FMP §5.2): chroma features → cosine similarity against 24 binary major/minor triad templates → argmax.
+2. [To-do] **HMM postfilter** (FMP §5.3)
+3. [To-do] **Neural model** (PyTorch)
 
-**Validation target.** Chopin, Étude Op. 25 No. 1 in A♭ major ("Aeolian Harp").
+**Validation target.** Chopin, Étude Op. 25 No. 1 in A♭ major ("Aeolian Harp") (annotation in-progress).
+
 ## Layout
 
 ```
@@ -19,18 +20,17 @@ fmp-chord-recognition/
 │   ├── evaluation.py        # mir_eval wrappers + confusion
 │   └── visualization.py   # plotting
 ├── notebooks/             # exploratory work
-├── scripts/               # CLI entry points
-├── tests/
 └── data/
     ├── audio/             # gitignored — drop mp3s here
     ├── annotations/       # committed — your ground-truth labels
     └── predictions/       # gitignored
+
+To be added: CLI & tests
 ```
 
 ## Setup
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -42,26 +42,8 @@ From a notebook in `notebooks/`, two lines at the top:
 import sys
 sys.path.insert(0, "..")
 
-from chordrec.features import compute_chromagram
-from chordrec.visualization import plot_chromagram
-```
-
-That adds the project root to `sys.path`, so `chordrec` (the directory) becomes importable as a module. No package install needed.
-
-## CLI
-
-```bash
-python scripts/predict.py --audio data/audio/op25_no1.mp3 --variant CQT \
-    --out data/predictions/op25_no1.csv
-
-python scripts/evaluate.py --ref data/annotations/op25_no1.csv \
-    --est data/predictions/op25_no1.csv
-```
-
-## Tests
-
-```bash
-python -m pytest tests/
+from src.features import compute_chromagram
+from src.visualization import plot_chromagram
 ```
 
 ## Annotation format
