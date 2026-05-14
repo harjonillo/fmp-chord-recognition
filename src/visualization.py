@@ -23,15 +23,19 @@ def plot_chromagram(
     cmap: str = "gray_r",
     clim: tuple[float, float] = (0.0, 1.0),
     use_flats: bool = False,
+    reference_root: int = 0,
+    vocab: Iterable[str] | None = None,
 ) -> Axes:
     """Plot a (12, N) chromagram."""
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 2.5))
+
+    labels = get_chord_labels(use_flats=use_flats, reference_root=reference_root, vocab=vocab)
     n_frames = X.shape[1]
     extent = (0, n_frames / feature_rate, -0.5, 11.5)
     ax.imshow(X, aspect="auto", origin="lower", cmap=cmap, extent=extent, clim=clim)
     ax.set_yticks(range(12))
-    ax.set_yticklabels(chroma_names(use_flats=use_flats))
+    ax.set_yticklabels(labels)
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Chroma")
     if title:
@@ -48,11 +52,12 @@ def plot_chord_similarity(
     title: str = "",
     cmap: str = "gray_r",
     use_flats: bool = False,
+    reference_root: int = 0,
 ) -> Axes:
     """Plot a (num_chords, N) time–chord similarity matrix."""
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
-    labels = get_chord_labels(nonchord=nonchord, use_flats=use_flats)
+    labels = get_chord_labels(nonchord=nonchord, use_flats=use_flats, reference_root=reference_root)
     n_frames = chord_sim.shape[1]
     extent = (0, n_frames / feature_rate, -0.5, len(labels) - 0.5)
     ax.imshow(chord_sim, aspect="auto", origin="lower", cmap=cmap, extent=extent)
@@ -99,12 +104,13 @@ def plot_recognition_summary(
     color_map: Mapping[str, str] | None = None,
     nonchord: bool = False,
     use_flats: bool = False,
+    reference_root: int = 0,
 ) -> Figure:
     """Three-panel summary: chromagram → chord similarity → reference strip."""
     n_panels = 3 if reference is not None else 2
     fig, axes = plt.subplots(n_panels, 1, figsize=(9, 7), constrained_layout=True)
 
-    plot_chromagram(chromagram, feature_rate, ax=axes[0], title="Chromagram", use_flats=use_flats)
+    plot_chromagram(chromagram, feature_rate, ax=axes[0], title="Chromagram", use_flats=use_flats, reference_root=reference_root)
     if reference is not None:
         overlay_annotations(axes[0], reference, color_map=color_map, alpha=0.15)
 
@@ -115,6 +121,7 @@ def plot_recognition_summary(
         nonchord=nonchord,
         title="Chord similarity",
         use_flats=use_flats,
+        reference_root=reference_root,
     )
     if reference is not None:
         overlay_annotations(axes[1], reference, color_map=color_map, alpha=0.15)

@@ -56,6 +56,7 @@ def recognize_template(
     norm_sim: str | None = "1",
     nonchord: bool = False,
     use_flats: bool = False,
+    reference_root: int = 0,
 ) -> RecognitionResult:
     """Recognize chords by template matching.
 
@@ -79,6 +80,8 @@ def recognize_template(
         If True, use flat spelling for chromatic roots (Db, Eb, Gb, Ab, Bb)
         instead of sharps. The templates themselves are unchanged; only the
         output labels differ.
+    reference_root : int
+        The semitone offset (0-11) of the reference root for template generation.
     """
     if vocab is None:
         vocab = VOCAB_TRIADS
@@ -95,7 +98,7 @@ def recognize_template(
     if X.shape[0] != 12:
         raise ValueError(f"Expected chromagram with 12 rows, got shape {X.shape}.")
 
-    templates = generate_chord_templates(vocab, nonchord=nonchord)
+    templates = generate_chord_templates(vocab, nonchord=nonchord, reference_root=reference_root)
     X_norm = normalize_columns(X, norm="2")
     T_norm = normalize_columns(templates, norm="2")
     chord_sim = T_norm.T @ X_norm  # (num_chords, num_frames)
@@ -112,10 +115,7 @@ def recognize_template(
         chord_max[idx, i] = chord_sim[idx, i]
     
     # add chord progression, removing consecutive duplicates
-    chord_progression = []
-    for i, idx in enumerate(chord_indices):
-        if not chord_progression or chord_progression[-1] != idx:
-            chord_progression.append(idx)
+    chord_progression = [labels[idx] for idx, _ in groupby(chord_indices)]
 
     return RecognitionResult(
         chord_sim=chord_sim,
