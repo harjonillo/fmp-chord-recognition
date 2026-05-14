@@ -53,5 +53,4 @@ CSV (libfmp-compatible) or `.lab` (MIREX/Isophonics). See `data/annotations/READ
 ## References
 
 - Müller, *Fundamentals of Music Processing*, Springer 2015 — Chapter 5.
-- Cho & Bello, "On the Relative Importance of Individual Components of Chord Recognition Systems," *IEEE/ACM TASLP* 22 (2014).
-- Jiang et al., "Analyzing Chroma Feature Types for Automated Chord Recognition," AES Semantic Audio 2011.
+- to read: [McLeod & Rohrmeier (2024) Detecting chord tone alterations and suspensions](https://www.tandfonline.com/doi/full/10.1080/09298215.2024.2412595#d1e156)
