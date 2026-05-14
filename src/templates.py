@@ -67,11 +67,7 @@ VOCAB_CLASSICAL: list[str] = [                                                  
     "", "m", "dim", "aug",                # all four triad qualities
     "7", "maj7", "m7", "dim7", "hdim7",   # tonal 7th chords
     "mmaj7", "aug7",                      # harmonic-minor / chromatic-romantic colour
-    "sus4",                               # 4-3 suspensions (the dominant suspension type)
 ]
-# Why sus4 but not sus2:
-# In chroma space, sus2 and sus4 are the same template at different roots
-# (Csus2 = C-D-G = chroma {0,2,7} = Gsus4 = G-C-D = chroma {0,2,7})
 VOCAB_EXTENDED: list[str] = [                                                      # 168 chords; adds fr6 + sus2
     *VOCAB_CLASSICAL, "fr6", "sus2",
 ]
