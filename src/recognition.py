@@ -32,9 +32,11 @@ class RecognitionResult:
         return [self.labels[i] for i in self.chord_indices]
 
     def to_intervals(self) -> list[tuple[float, float, str]]:
-        """Collapse frames to (start, end, label) intervals in seconds.
+        """Collapse frames to ``(start, end, label)`` intervals in seconds.
 
         Consecutive frames with the same label are merged.
+
+        :returns: List of intervals, each ``(start_seconds, end_seconds, label)``.
         """
         intervals: list[tuple[float, float, str]] = []
         frame_dur = 1.0 / self.feature_rate
@@ -60,28 +62,24 @@ def recognize_template(
 ) -> RecognitionResult:
     """Recognize chords by template matching.
 
-    Parameters
-    ----------
-    chroma : Chromagram or np.ndarray
-        A Chromagram from `compute_chromagram`, or a raw (12, num_frames) array
-        (in which case `feature_rate` must be provided).
-    feature_rate : float, optional
-        Required when `chroma` is a raw array.
-    vocab : list[str], optional
-        Chord qualities to recognize. Defaults to `VOCAB_TRIADS` (maj/min, 24
-        chords). See `chordrec.templates` for predefined extended vocabularies.
-    norm_sim : {"1", "2", "max", None}
-        Normalization of the per-frame similarity vector across chords. FMP uses
-        "1" (similarities sum to 1 per frame, pseudo-posterior) or "max" (best
-        chord = 1).
-    nonchord : bool
-        If True, include the all-ones non-chord template (label "N").
-    use_flats : bool
-        If True, use flat spelling for chromatic roots (Db, Eb, Gb, Ab, Bb)
-        instead of sharps. The templates themselves are unchanged; only the
-        output labels differ.
-    reference_root : int
-        The semitone offset (0-11) of the reference root for template generation.
+    :param chroma: A :class:`Chromagram` from :func:`compute_chromagram`, or a
+        raw ``(12, num_frames)`` array (in which case ``feature_rate`` must be
+        provided).
+    :param feature_rate: Frames per second. Required when ``chroma`` is a raw
+        array; ignored otherwise.
+    :param vocab: Chord qualities to recognize. Defaults to ``VOCAB_TRIADS``
+        (maj/min, 24 chords). See :mod:`src.templates` for predefined extended
+        vocabularies.
+    :param norm_sim: Normalization of the per-frame similarity vector across
+        chords. One of ``"1"`` (similarities sum to 1 per frame, pseudo-posterior),
+        ``"2"``, ``"max"`` (best chord = 1), or ``None``.
+    :param nonchord: If ``True``, include the all-ones non-chord template
+        (label ``"N"``).
+    :param use_flats: If ``True``, use flat spelling for chromatic roots
+        (Db, Eb, Gb, Ab, Bb) instead of sharps. The templates themselves are
+        unchanged; only the output labels differ.
+    :param reference_root: The semitone offset (0-11) of the reference root
+        used for template generation.
     """
     if vocab is None:
         vocab = VOCAB_TRIADS

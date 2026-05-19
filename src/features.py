@@ -18,20 +18,35 @@ import numpy as np
 Variant = Literal["STFT", "IIR", "CQT"]
 
 
-@dataclass(frozen=True)
+@dataclass
 class Chromagram:
-    """A chromagram with the metadata needed downstream."""
+    """A chromagram with the metadata needed downstream.
 
-    X: np.ndarray            # (12, num_frames)
-    feature_rate: float      # frames per second
-    duration: float          # seconds
-    sr: int
+    :param X: Chroma matrix of shape (num_chroma, num_frames).
+    :param feature_rate: Frames per second.
+    :param duration: Audio duration in seconds.
+    :param sample_rate: Audio sample rate in Hz.
+    :param hop_length: STFT hop length in samples.
+    :param variant: Which chroma variant produced this object ("STFT", "IIR", or "CQT").
+    """
+
+    X: np.ndarray
+    feature_rate: float
+    duration: float
+    sample_rate: int
     hop_length: int
     variant: str
 
 
 def normalize_columns(X: np.ndarray, norm: str | None = "2", eps: float = 1e-10) -> np.ndarray:
-    """L1, L2, or max-normalize each column. Zero-norm columns are left as zero."""
+    """L1, L2, or max-normalize each column. Zero-norm columns are left as zero.
+
+    :param X: Matrix whose columns will be normalized.
+    :param norm: Norm to apply per column: ``"1"`` (sum of absolute values), ``"2"``
+        (Euclidean), ``"max"`` (max of absolute values), or ``None`` to skip
+        normalization and return ``X`` unchanged.
+    :param eps: Columns with norm below ``eps`` are treated as zero and left untouched.
+    """
     if norm is None:
         return X
     if norm == "1":
@@ -50,7 +65,7 @@ def compute_chromagram(
     audio_path: str,
     *,
     variant: Variant = "CQT",
-    sr: int = 22050,
+    sample_rate: int = 22050,
     n_fft: int = 4096,
     hop_length: int = 2048,
     gamma: float | None = None,
@@ -58,27 +73,22 @@ def compute_chromagram(
 ) -> Chromagram:
     """Load an audio file and compute its chromagram.
 
-    Parameters
-    ----------
-    audio_path : str
-        Path to a wav/mp3/flac file.
-    variant : {"STFT", "IIR", "CQT"}
-        Feature variant. Default "CQT" usually gives cleaner piano chroma;
-        "STFT" matches the FMP notebook's first example.
-    sr : int
-        Target sample rate.
-    n_fft, hop_length : int
-        Frame and hop length. Defaults match FMP §5.2.
-    gamma : float, optional
-        Log compression: log(1 + gamma * |S|^2) for STFT; log(1 + gamma * S) for IIR.
-        Ignored for CQT.
-    norm : {"1", "2", "max", None}
-        Per-frame normalization of the final chromagram.
+    :param audio_path: Path to a wav/mp3/flac file.
+    :param variant: Feature variant — one of ``"STFT"``, ``"IIR"``, or ``"CQT"``.
+        Default ``"CQT"`` usually gives cleaner piano chroma; ``"STFT"`` matches
+        the FMP notebook's first example.
+    :param sample_rate: Target sample rate in Hz; audio is resampled on load.
+    :param n_fft: STFT window length in samples (also the FFT size).
+    :param hop_length: STFT hop length in samples. Defaults match FMP §5.2.
+    :param gamma: Log-compression factor: ``log(1 + gamma * |S|^2)`` for STFT,
+        ``log(1 + gamma * S)`` for IIR. Ignored for CQT. ``None`` disables it.
+    :param norm: Per-frame normalization of the final chromagram. One of
+        ``"1"``, ``"2"``, ``"max"``, or ``None``.
     """
     import librosa  # lazy: slow to import, not needed for the rest of the package
 
-    x, sr = librosa.load(audio_path, sr=sr)
-    duration = x.shape[0] / sr
+    x, sample_rate = librosa.load(audio_path, sr=sample_rate)
+    duration = x.shape[0] / sample_rate
 
     if variant == "STFT":
         S = librosa.stft(x, n_fft=n_fft, hop_length=hop_length, pad_mode="constant", center=True)
@@ -86,12 +96,12 @@ def compute_chromagram(
         if gamma is not None:
             S = np.log(1 + gamma * S)
         X = librosa.feature.chroma_stft(
-            S=S, sr=sr, tuning=0, norm=None, hop_length=hop_length, n_fft=n_fft
+            S=S, sr=sample_rate, tuning=0, norm=None, hop_length=hop_length, n_fft=n_fft
         )
     elif variant == "CQT":
-        X = librosa.feature.chroma_cqt(y=x, sr=sr, hop_length=hop_length, norm=None)
+        X = librosa.feature.chroma_cqt(y=x, sr=sample_rate, hop_length=hop_length, norm=None)
     elif variant == "IIR":
-        S = librosa.iirt(y=x, sr=sr, win_length=n_fft, hop_length=hop_length, center=True, tuning=0.0)
+        S = librosa.iirt(y=x, sr=sample_rate, win_length=n_fft, hop_length=hop_length, center=True, tuning=0.0)
         if gamma is not None:
             S = np.log(1.0 + gamma * S)
         X = librosa.feature.chroma_cqt(
@@ -104,9 +114,9 @@ def compute_chromagram(
 
     return Chromagram(
         X=X,
-        feature_rate=sr / hop_length,
+        feature_rate=sample_rate / hop_length,
         duration=duration,
-        sr=sr,
+        sample_rate=sample_rate,
         hop_length=hop_length,
         variant=variant,
     )

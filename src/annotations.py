@@ -16,7 +16,12 @@ Interval = tuple[float, float, str]
 
 
 def read_annotations(path: str | Path, *, fmt: str | None = None) -> list[Interval]:
-    """Read a chord annotation file into a list of (start, end, label) tuples."""
+    """Read a chord annotation file into a list of ``(start, end, label)`` tuples.
+
+    :param path: Path to the annotation file.
+    :param fmt: Either ``"csv"`` or ``"lab"``. If ``None`` (default), inferred
+        from the file extension.
+    """
     path = Path(path)
     fmt = fmt or _infer_format(path)
 
@@ -40,7 +45,13 @@ def write_annotations(
     *,
     fmt: str | None = None,
 ) -> None:
-    """Write intervals to disk in the chosen format."""
+    """Write intervals to disk in the chosen format.
+
+    :param intervals: List of ``(start, end, label)`` tuples to write.
+    :param path: Destination path. Parent directories are created if needed.
+    :param fmt: Either ``"csv"`` or ``"lab"``. If ``None`` (default), inferred
+        from the file extension.
+    """
     path = Path(path)
     fmt = fmt or _infer_format(path)
     df = pd.DataFrame(intervals, columns=["start", "end", "label"])

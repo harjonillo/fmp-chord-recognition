@@ -36,8 +36,11 @@ def chroma_names(*, use_flats: bool = True) -> tuple[str, ...]:
 
     The natural notes (C, D, E, F, G, A, B) are unchanged; only the five
     chromatic pitch classes differ. Flat spelling is the package default
-    (set for flat-key classical repertoire); pass `use_flats=False` for
+    (set for flat-key classical repertoire); pass ``use_flats=False`` for
     the FMP §5.2 sharp convention.
+
+    :param use_flats: If ``True`` (default), return ``("C", "Db", "D", "Eb", ...)``.
+        If ``False``, return the sharp variant ``("C", "C#", "D", "D#", ...)``.
     """
     return CHROMA_NAMES_FLAT if use_flats else CHROMA_NAMES
 
@@ -50,11 +53,11 @@ QUALITY_INTERVALS: dict[str, tuple[int, ...]] = {
     "m7":    (0, 3, 7, 10),     # minor 7th
     "dim":   (0, 3, 6),         # diminished triad
     "aug":   (0, 4, 8),         # augmented triad
-    "dim7":  (0, 3, 6, 9),      # fully diminished 7th  (vii°7)
-    "hdim7": (0, 3, 6, 10),     # half-diminished 7th   (ø7, a.k.a. m7♭5)
-    "mmaj7": (0, 3, 7, 11),     # minor-major 7th       (Cm(maj7): used in harmonic-minor contexts, Chopin/Wagner)
-    "aug7":  (0, 4, 8, 10),     # augmented 7th         (a.k.a. V+7; Schumann/Wagner, not jazz-only)
-    "fr6":   (0, 4, 6, 10),     # French augmented 6th  (chord-tone set {0,4,6,10}; see note below)
+    "dim7":  (0, 3, 6, 9),      # fully diminished 7th
+    "hdim7": (0, 3, 6, 10),     # half-diminished 7th   
+    "mmaj7": (0, 3, 7, 11),     # minor-major 7th       
+    "aug7":  (0, 4, 8, 10),     # augmented 7th         
+    "fr6":   (0, 4, 6, 10),     # French augmented 6th  
     "sus4":  (0, 5, 7),         # suspended 4th
     "sus2":  (0, 2, 7),         # suspended 2nd
 }
@@ -62,13 +65,13 @@ QUALITY_INTERVALS: dict[str, tuple[int, ...]] = {
 # Preset vocabularies. Order is preserved in the label list and template columns.
 VOCAB_CHROMA: list[str] = [""]                                                     # 12 chords (chroma templates only)
 VOCAB_TRIADS: list[str] = ["", "m"]                                                # 24 chords (FMP §5.2 default)
-VOCAB_TRIADS_SEVENTHS: list[str] = ["", "m", "7", "maj7", "m7"]                    # 60 chords
-VOCAB_CLASSICAL: list[str] = [                                                     # 144 chords
-    "", "m", "dim", "aug",                # all four triad qualities
-    "7", "maj7", "m7", "dim7", "hdim7",   # tonal 7th chords
-    "mmaj7", "aug7",                      # harmonic-minor / chromatic-romantic colour
+VOCAB_TRIADS_SEVENTHS: list[str] = ["", "m", "7", "maj7", "m7"]                    
+VOCAB_CLASSICAL: list[str] = [                                                     
+    "", "m", "dim", "aug",                
+    "7", "maj7", "m7", "dim7",            
+    "mmaj7", "aug7",                      
 ]
-VOCAB_EXTENDED: list[str] = [                                                      # 168 chords; adds fr6 + sus2
+VOCAB_EXTENDED: list[str] = [                                                      
     *VOCAB_CLASSICAL, "fr6", "sus2",
 ]
 
@@ -108,13 +111,20 @@ def get_chord_labels(
     """Return the ordered list of chord labels for the given vocabulary.
 
     Order: for each quality (in vocabulary order), all 12 roots starting from
-    `reference_root` and ascending by semitone. With the default `reference_root=0`
-    (C), the major block is [C, Db, D, ..., B]. With `reference_root=8` (A♭),
-    the major block is [Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G], i.e. the
-    tonic chord of A♭ major sits at column 0.
+    ``reference_root`` and ascending by semitone. With the default
+    ``reference_root=0`` (C), the major block is ``[C, Db, D, ..., B]``. With
+    ``reference_root=8`` (A♭), the major block is
+    ``[Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G]`` — i.e. the tonic chord of
+    A♭ major sits at column 0.
 
-    Defaults are `VOCAB_CLASSICAL` (144 chords) and flat spelling, chosen for
-    flat-key classical repertoire.
+    :param vocab: Iterable of quality suffixes (e.g. ``["", "m", "7"]``). Each
+        must be a key of :data:`QUALITY_INTERVALS`. Defaults to
+        :data:`VOCAB_CLASSICAL` (144 chords).
+    :param nonchord: If ``True``, append the non-chord label ``"N"`` at the end.
+    :param use_flats: If ``True`` (default), use flat spelling for roots
+        (Db, Eb, Gb, Ab, Bb); otherwise sharp spelling.
+    :param reference_root: Semitone offset (0-11) of the first root in each
+        quality block.
     """
     if vocab is None:
         vocab = VOCAB_CLASSICAL
@@ -135,16 +145,16 @@ def generate_chord_templates(
     nonchord: bool = False,
     reference_root: int = REFERENCE_ROOT_C,
 ) -> np.ndarray:
-    """Build the chord-template matrix of shape (12, 12 * len(vocab) [+ 1]).
+    """Build the chord-template matrix of shape ``(12, 12 * len(vocab) [+ 1])``.
 
     Column ordering: for each quality, the 12 roots cycle starting from
-    `reference_root` (in semitones from C). With `reference_root=8`, column 0
-    is the A♭-rooted chord of the first quality — i.e. A♭ major when the first
-    quality is `""`. The template *contents* (which chroma bins each column
-    activates) are unchanged: only the column ordering shifts.
+    ``reference_root`` (in semitones from C). With ``reference_root=8``, column
+    0 is the A♭-rooted chord of the first quality — i.e. A♭ major when the
+    first quality is ``""``. The template *contents* (which chroma bins each
+    column activates) are unchanged: only the column ordering shifts.
 
-    Defaults to `VOCAB_CLASSICAL` (144 chords). For the FMP §5.2 baseline pass
-    `vocab=VOCAB_TRIADS` explicitly.
+    Defaults to :data:`VOCAB_CLASSICAL` (144 chords). For the FMP §5.2 baseline
+    pass ``vocab=VOCAB_TRIADS`` explicitly.
 
     Each column is the binary chroma vector for one chord, in the order given by
     :func:`get_chord_labels`. The optional non-chord template is all-ones.
@@ -155,6 +165,13 @@ def generate_chord_templates(
     chords whenever the chroma signal contains overtones or pedal blur. See
     Cho & Bello (2014) for a treatment, and consider non-binary templates or
     HMM postfiltering before relying on the extended vocabulary.
+
+    :param vocab: Iterable of quality suffixes. Each must be a key of
+        :data:`QUALITY_INTERVALS`. Defaults to :data:`VOCAB_CLASSICAL`.
+    :param nonchord: If ``True``, append an all-ones non-chord template as the
+        final column.
+    :param reference_root: Semitone offset (0-11) used as the starting root of
+        each quality block (see "Column ordering" above).
     """
     if vocab is None:
         vocab = VOCAB_CLASSICAL
