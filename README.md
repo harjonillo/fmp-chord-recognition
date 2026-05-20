@@ -32,5 +32,5 @@ To be added: CLI & tests
 
 ## References
 
-- Müller, *Fundamentals of Music Processing*, Springer 2015 — Chapter 5.
+- Müller, *Fundamentals of Music Processing*, Springer 2015 — Chapter 5. [FMP notebooks](https://www.audiolabs-erlangen.de/resources/MIR/FMP/C0/C0.html)
 - to read: [McLeod & Rohrmeier (2024) Detecting chord tone alterations and suspensions](https://www.tandfonline.com/doi/full/10.1080/09298215.2024.2412595#d1e156)
