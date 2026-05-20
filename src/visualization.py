@@ -7,11 +7,23 @@ from typing import Mapping
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from src.annotations import Interval
 from src.templates import chroma_names, get_chord_labels
+
+
+def _add_cell_grid(ax: Axes, n_rows: int) -> None:
+    """Draw thin white lines between rows so each chroma/chord cell is visible.
+
+    Uses ``axhline`` with an explicit zorder rather than the grid system so
+    seaborn themes (which flip ``axes.axisbelow`` to ``True``) can't hide the
+    separators behind the pcolormesh.
+    """
+    for y in np.arange(1, n_rows) - 0.5:
+        ax.axhline(y, color="white", linewidth=0.5, zorder=3)
 
 
 def plot_chromagram(
@@ -20,7 +32,7 @@ def plot_chromagram(
     *,
     ax: Axes | None = None,
     title: str = "",
-    cmap: str = "gray_r",
+    cmap_str: str = "crest",
     clim: tuple[float, float] = (0.0, 1.0),
     use_flats: bool = False,
     reference_root: int = 0,
@@ -31,7 +43,9 @@ def plot_chromagram(
     :param feature_rate: Frames per second; used to convert the x-axis to seconds.
     :param ax: Matplotlib axes to draw on. If ``None``, a new figure is created.
     :param title: Optional axes title.
-    :param cmap: Matplotlib colormap name.
+    :param cmap: Matplotlib colormap name, or one of the seaborn palette names
+        (``"crest"``, ``"flare"``, ``"rocket"``, ``"mako"``, ``"vlag"``,
+        ``"icefire"``).
     :param clim: ``(vmin, vmax)`` tuple clamping the image intensity range.
     :param use_flats: If ``True``, label the y-axis with flat-spelled chroma
         names (Db, Eb, Gb, Ab, Bb); otherwise sharps.
@@ -44,10 +58,13 @@ def plot_chromagram(
     names = chroma_names(use_flats=use_flats)
     labels = [names[(reference_root + i) % 12] for i in range(12)]
     n_frames = X.shape[1]
-    extent = (0, n_frames / feature_rate, -0.5, 11.5)
-    ax.imshow(X, aspect="auto", origin="lower", cmap=cmap, extent=extent, clim=clim)
+    x_edges = np.arange(n_frames + 1) / feature_rate
+    y_edges = np.arange(13) - 0.5
+    cmap = sns.color_palette(cmap_str, as_cmap=True)
+    ax.pcolormesh(x_edges, y_edges, X, cmap=cmap, vmin=clim[0], vmax=clim[1])
     ax.set_yticks(range(12))
     ax.set_yticklabels(labels)
+    _add_cell_grid(ax, 12)
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Chroma")
     if title:
@@ -62,7 +79,7 @@ def plot_chord_similarity(
     nonchord: bool = False,
     ax: Axes | None = None,
     title: str = "",
-    cmap: str = "gray_r",
+    cmap_str: str = "crest",
     use_flats: bool = False,
     reference_root: int = 0,
 ) -> Axes:
@@ -73,7 +90,9 @@ def plot_chord_similarity(
     :param nonchord: If ``True``, include the trailing ``"N"`` row in the y-tick labels.
     :param ax: Matplotlib axes to draw on. If ``None``, a new figure is created.
     :param title: Optional axes title.
-    :param cmap: Matplotlib colormap name.
+    :param cmap_str: Matplotlib colormap name, or one of the seaborn palette names
+        (``"crest"``, ``"flare"``, ``"rocket"``, ``"mako"``, ``"vlag"``,
+        ``"icefire"``).
     :param use_flats: If ``True``, use flat spelling for chord roots in y-tick labels.
     :param reference_root: Semitone offset (0-11) of the first root in each
         quality block (see :func:`get_chord_labels`).
@@ -82,10 +101,13 @@ def plot_chord_similarity(
         _, ax = plt.subplots(figsize=(8, 5))
     labels = get_chord_labels(nonchord=nonchord, use_flats=use_flats, reference_root=reference_root)
     n_frames = chord_sim.shape[1]
-    extent = (0, n_frames / feature_rate, -0.5, len(labels) - 0.5)
-    ax.imshow(chord_sim, aspect="auto", origin="lower", cmap=cmap, extent=extent)
+    x_edges = np.arange(n_frames + 1) / feature_rate
+    y_edges = np.arange(len(labels) + 1) - 0.5
+    cmap = sns.color_palette(cmap_str, as_cmap=True)
+    ax.pcolormesh(x_edges, y_edges, chord_sim, cmap=cmap)
     ax.set_yticks(range(len(labels)))
     ax.set_yticklabels(labels)
+    _add_cell_grid(ax, len(labels))
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Chord")
     if title:

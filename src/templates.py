@@ -69,7 +69,7 @@ VOCAB_TRIADS_SEVENTHS: list[str] = ["", "m", "7", "maj7", "m7"]
 VOCAB_CLASSICAL: list[str] = [                                                     
     "", "m", "dim", "aug",                
     "7", "maj7", "m7", "dim7",            
-    "mmaj7", "aug7",                      
+    "aug7", #"mmaj7"                
 ]
 VOCAB_EXTENDED: list[str] = [                                                      
     *VOCAB_CLASSICAL, "fr6", "sus2",
