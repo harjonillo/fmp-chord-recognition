@@ -59,6 +59,7 @@ QUALITY_INTERVALS: dict[str, tuple[int, ...]] = {
     "aug7":  (0, 4, 8, 10),     # augmented 7th         
     "fr6":   (0, 4, 6, 10),     # French augmented 6th  
     "sus4":  (0, 5, 7),         # suspended 4th
+    "7sus4":  (0, 5, 10),       # dominant 7th, suspended 4th
     "sus2":  (0, 2, 7),         # suspended 2nd
 }
 
@@ -68,7 +69,7 @@ VOCAB_TRIADS: list[str] = ["", "m"]                                             
 VOCAB_TRIADS_SEVENTHS: list[str] = ["", "m", "7", "maj7", "m7"]                    
 VOCAB_CLASSICAL: list[str] = [                                                     
     "", "m", "dim", "aug",                
-    "7", "maj7", "m7", "dim7",            
+    "7", "maj7", "m7", "dim7", "hdim7", "7sus4", "sus4",  
     "aug7", #"mmaj7"                
 ]
 VOCAB_EXTENDED: list[str] = [                                                      

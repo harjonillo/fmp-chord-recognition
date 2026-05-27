@@ -22,7 +22,6 @@ class RecognitionResult:
 
     chord_sim: np.ndarray          # (num_chords, num_frames)
     chord_max: np.ndarray          # (num_chords, num_frames) — only the max sim per frame is nonzero
-    chord_progression: list[int]   # chord indices with consecutive duplicates removed
     chord_indices: np.ndarray      # (num_frames,) — argmax chord index per frame
     labels: list[str]              # vocabulary, indexed by chord_indices
     feature_rate: float            # frames per second
@@ -86,12 +85,15 @@ def recognize_template(
 
     if isinstance(chroma, Chromagram):
         X = chroma.X
+        print(chroma.X.shape)
         fr = chroma.feature_rate
+        n_frames = X.shape[1]
     else:
         if feature_rate is None:
             raise ValueError("feature_rate must be provided when chroma is a raw array.")
         X = chroma
         fr = feature_rate
+        n_frames = X.shape[1]
 
     if X.shape[0] != 12:
         raise ValueError(f"Expected chromagram with 12 rows, got shape {X.shape}.")
@@ -112,13 +114,10 @@ def recognize_template(
     for i, idx in enumerate(chord_indices):
         chord_max[idx, i] = chord_sim[idx, i]
     
-    # add chord progression, removing consecutive duplicates
-    chord_progression = [labels[idx] for idx, _ in groupby(chord_indices)]
 
     return RecognitionResult(
         chord_sim=chord_sim,
         chord_max=chord_max,
-        chord_progression=chord_progression,
         chord_indices=chord_indices,
         labels=labels,
         feature_rate=fr,
